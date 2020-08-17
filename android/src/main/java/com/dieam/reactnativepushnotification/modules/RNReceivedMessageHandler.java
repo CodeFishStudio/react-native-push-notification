@@ -146,6 +146,11 @@ public class RNReceivedMessageHandler {
         if (config.getNotificationForeground() || !isForeground) {
             Log.v(LOG_TAG, "sendNotification: " + bundle);
 
+            Bundle includedBundle = bundle.getBundle("data");
+            String includedMessage = includedBundle.getString("message");
+
+            bundle.putString("message", includedMessage);
+
             Application applicationContext = (Application) context.getApplicationContext();
             RNPushNotificationHelper pushNotificationHelper = new RNPushNotificationHelper(applicationContext);
             pushNotificationHelper.sendToNotificationCentre(bundle);

@@ -36,6 +36,7 @@ import com.facebook.react.bridge.WritableMap;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -104,19 +105,24 @@ public class RNPushNotificationHelper {
     }
 
     private PendingIntent toScheduleNotificationIntent(Bundle bundle) {
-        try {
-            int notificationID = Integer.parseInt(bundle.getString("id"));
+      int id = 1000;
+      try {
+          if (bundle.getString("id") == null) {
+              SecureRandom randomNumberGenerator = new SecureRandom();
+              bundle.putString("id", String.valueOf(randomNumberGenerator.nextInt()));
+          }
+          int notificationID = Integer.parseInt(bundle.getString("id"));
 
-            Intent notificationIntent = new Intent(context, RNPushNotificationPublisher.class);
-            notificationIntent.putExtra(RNPushNotificationPublisher.NOTIFICATION_ID, notificationID);
-            notificationIntent.putExtras(bundle);
+          Intent notificationIntent = new Intent(context, RNPushNotificationPublisher.class);
+          notificationIntent.putExtra(RNPushNotificationPublisher.NOTIFICATION_ID, notificationID);
+          notificationIntent.putExtras(bundle);
 
-            return PendingIntent.getBroadcast(context, notificationID, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        } catch (Exception e) {
-            Log.e(LOG_TAG, "Unable to parse Notification ID", e);
-        }
+          return PendingIntent.getBroadcast(context, id, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+      } catch (Exception e) {
+          Log.e(LOG_TAG, "Unable to parse Notification ID", e);
+      }
 
-        return null;
+      return null;
     }
 
     public void sendNotificationScheduled(Bundle bundle) {
@@ -221,8 +227,10 @@ public class RNPushNotificationHelper {
 
             String channel_id = NOTIFICATION_CHANNEL_ID;
 
-            String title = bundle.getString("title");
-            if (title == null) {
+            Bundle includedBundle = bundle.getBundle("data");
+            String title = includedBundle.getString("title");
+
+            if (title.trim().isEmpty()) {
                 ApplicationInfo appInfo = context.getApplicationInfo();
                 title = context.getPackageManager().getApplicationLabel(appInfo).toString();
             }
